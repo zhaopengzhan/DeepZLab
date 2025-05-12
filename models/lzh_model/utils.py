@@ -1,0 +1,1 @@
+NLCD_CLASSES = range(17)

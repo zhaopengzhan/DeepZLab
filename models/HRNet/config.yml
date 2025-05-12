@@ -1,0 +1,39 @@
+model:
+  name: seg_hrnet
+  pretrained: #"pretrained_models/hrnetv2_w48_imagenet_pretrained.pth"
+  extra:
+    in_channel: 3
+    norm_layer:
+    final_conv_kernel: 1
+
+    stage1:
+      block: Bottleneck
+      num_modules: 1
+      num_branches: 1
+      num_blocks: [4]
+      num_channels: [64]
+      fuse_method: sum
+
+    stage2:
+      block: BasicBlock
+      num_modules: 1
+      num_branches: 2
+      num_blocks: [4,4]
+      num_channels: [48,96]
+      fuse_method: sum
+
+    stage3:
+      block: BasicBlock
+      num_modules: 4
+      num_branches: 3
+      num_blocks: [ 4,4,4 ]
+      num_channels: [ 48,96,192 ]
+      fuse_method: sum
+
+    stage4:
+      block: BasicBlock
+      num_modules: 3
+      num_branches: 4
+      num_blocks: [ 4,4,4,4 ]
+      num_channels: [ 48,96,192,384 ]
+      fuse_method: sum
