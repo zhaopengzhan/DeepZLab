@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from dataloader.Mars import Mars
+from dataloader.others.Mars import Mars
 from utils import cm
 from utils.metrics import Evaluator, evaluate
 from utils.misc import AverageMeter

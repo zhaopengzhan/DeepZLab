@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 import models
 from configs.BaseConfig import BaseConfig
-from dataloader.Chesapeake import Chesapeake
+from dataloader.Chesapeake import Chesapeake_L2H
 from utils.misc import *
 
 

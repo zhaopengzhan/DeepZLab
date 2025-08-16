@@ -1,7 +1,37 @@
-.git/
+# Python 编译缓存
+__pycache__/
+*.py[cod]
+*.so
 
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
+
+# 数据文件（可按需保留）
+data/
+datasets/
+
+# 模型文件
+*.npz
+*.pth
+*.pt
+*.h5
+
+# 训练输出
 run/
+logs/
+results/
+outputs/
+figures/
 
-cache_huggingfece/
+# 缓存
+cache/
+cache_huggingface/
+*.cache
 
-单元测试/
+# IDE / 编辑器
+.vscode/
+.idea/
+
+# OS 系统文件
+.DS_Store
+Thumbs.db

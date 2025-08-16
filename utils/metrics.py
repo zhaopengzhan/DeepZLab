@@ -6,10 +6,10 @@ from utils.misc import Result
 def fast_hist(label_true, label_pred, n_class):
     mask = (label_true >= 0) & (label_true < n_class)
     # TODO:不一定要有
-    mask_p = (label_pred >= 0) & (label_pred < n_class)
+    # mask_p = (label_pred >= 0) & (label_pred < n_class)
 
     hist = np.bincount(
-        n_class * label_true[mask][mask_p].astype(int) + label_pred[mask][mask_p],
+        n_class * label_true[mask].astype(int) + label_pred[mask],
         minlength=n_class ** 2).reshape(n_class, n_class)
     return hist
 

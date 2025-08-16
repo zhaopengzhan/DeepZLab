@@ -1,57 +1,59 @@
-import glob
+import importlib
+import logging
+import pkgutil
+import warnings
+from pathlib import Path
+from typing import Optional
 
-from torch.utils.data import DataLoader
+from mmengine.registry import Registry
 
-from dataloader.Poland import Poland
+logger = logging.getLogger(__name__)
+DeepZData = Registry('DATALOADERS')
 
-
-def build_dataloader(data_name):
-
-    if data_name == 'L2HNetV2':
-        return build_chesapeake()
-    pass
-
-
-def build_poland(args):
-    args.batch_size = 8
-    args.num_workers = 2
-    args.num_chips_per_tile = 4
-    args.image_size = 224
-    args.stride = 112
-    args.image_re_path = r'F:\datasets\OpenEarthMap\OpenEarthMap_wo_xBD\*\labels\*.tif'
-    train_label_hr_list = glob.glob(args.image_re_path)
-    train_label_lr_list = [filename.replace('labels', 'ESA_GLC10') for filename in train_label_hr_list]
-    train_image_list = [filename.replace('labels', 'images') for filename in train_label_hr_list]
-
-    train_ds = Poland(train_image_list, train_label_lr_list, train_label_hr_list, label_type=args.label_type,
-                      chip_size=args.image_size, num_chips_per_tile=args.num_chips_per_tile)
-
-    train_dl = DataLoader(train_ds, batch_size=args.batch_size, drop_last=True, num_workers=8, pin_memory=False)
-
-    test_dl = None
-
-    print('dataloader finish')
-    return train_dl, test_dl
+#
+_pkg_dir = Path(__file__).resolve().parent
+_prefix = __name__ + '.'
+for m in pkgutil.walk_packages([str(_pkg_dir)], _prefix):
+    importlib.import_module(m.name)
 
 
+def list_dataloaders():
+    print(DeepZData)
+    return list(DeepZData.module_dict)
 
-def build_chesapeake(args):
-    args.batch_size = 8
-    args.num_workers = 2
-    args.num_chips_per_tile = 4
-    args.image_size = 224
-    args.stride = 112
-    args.image_re_path = r'F:\datasets\OpenEarthMap\OpenEarthMap_wo_xBD\*\labels\*.tif'
-    train_label_hr_list = glob.glob(args.image_re_path)
-    train_label_lr_list = [filename.replace('labels', 'ESA_GLC10') for filename in train_label_hr_list]
-    train_image_list = [filename.replace('labels', 'images') for filename in train_label_hr_list]
 
-    train_ds = Poland(train_image_list, train_label_lr_list, train_label_hr_list, label_type=args.label_type,
-                      chip_size=args.image_size, num_chips_per_tile=args.num_chips_per_tile)
+# deprecated
+def build_dataloader1(name: str,
+                      **kwargs):
+    """
+    name: 在 Registry 里注册的 key
+    kwargs    : 直接透传给模型 __init__
+    """
+    warnings.simplefilter("default", DeprecationWarning)
+    warnings.warn("function is deprecated", DeprecationWarning)
 
-    train_dl = DataLoader(train_ds, batch_size=args.batch_size, drop_last=True, num_workers=8, pin_memory=False)
+    cfg = dict(type=name, **kwargs)
+    return DeepZData.build(cfg)
 
-    test_dl = None
 
-    print('dataloader finish')
-    return train_dl, test_dl
+def build_dataloader(name: str, use_cfg: Optional[bool] = False, **kwargs):
+    """
+    Build a dataloader by name.
+    If use_cfg is True and the registered class defines a build method, try to call it.
+    kwargs are merged into cfg and passed to the build procedure.
+    """
+    cls = DeepZData.module_dict.get(name)
+
+    if cls is None:
+        raise KeyError(f"{name} not found in DeepZData registry")
+    cfg = dict(type=name, **kwargs)
+    if use_cfg == False and hasattr(cls, "build") and callable(getattr(cls, "build")):
+        try:
+            return cls.build()
+        except TypeError:
+            logger.exception("cls.build raised exception for %s, fallback to Registry.build", name)
+            return DeepZData.build(cfg)
+    else:
+        return DeepZData.build(cfg)
+
+

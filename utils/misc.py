@@ -23,11 +23,11 @@ def calRunTime(func):
 
     return wrapper
 
-
 class calRunTimer():
-    def __init__(self, func=None, block_name=''):
+    def __init__(self, block_name='', func=None, disable=False):
         self.func = func
         self.block_name = block_name
+        self.disable = disable
         if func is not None:
             # 如果作为装饰器使用
             # 保留函数的属性（如__name__, __doc__等）
@@ -37,7 +37,7 @@ class calRunTimer():
         start_time = time.time()
         result = self.func(*args, **kwargs)
         end_time = time.time()
-        print(f"函数 `{self.func.__name__}` 运行时间: {end_time - start_time:.4f} 秒")
+        if not self.disable: print(f"函数 `{self.func.__name__}` 运行时间: {end_time - start_time:.4f} 秒")
         return result
 
     def __enter__(self):
@@ -49,7 +49,7 @@ class calRunTimer():
         """ 上下文管理器计算运行时间 """
         self.end_time = time.time()  # 记录结束时间
         elapsed_time = self.end_time - self.start_time
-        print(f"代码块`{self.block_name}`运行时间 运行时间: {elapsed_time:.4f} 秒")
+        if not self.disable: print(f"代码块`{self.block_name}`运行时间 运行时间: {elapsed_time:.4f} 秒")
 
 
 class Wrapper:
@@ -178,6 +178,10 @@ def adjust_checkpoint(checkpoint, model_state):
 
     return updated_checkpoint
 
+def custom_collate_fn(batch):
+    images, labels = zip(*batch)
+    # images = torch.stack(images, dim=0)
+    return images, labels
 
 if __name__ == '__main__':
     loss_wrapper = Wrapper()
