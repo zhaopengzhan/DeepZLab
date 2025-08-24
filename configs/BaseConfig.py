@@ -21,6 +21,7 @@ class BaseConfig(ABC):
         for key, value in config.items():
             if not hasattr(args, key) or getattr(args, key) is None:
                 setattr(args, key, value)
+
         self.config = args
         self.train_dl = self.set_train_dl()
         self.val_list = self.set_val_list()
@@ -85,7 +86,3 @@ class BaseConfig(ABC):
                 "val_one_epoch": self.val_one_epoch
             }
         return self.config, self.train_dl, self.val_list, self.model, self.train_one_epoch, self.val_one_epoch
-
-
-if __name__ == '__main__':
-    b = BaseConfig()

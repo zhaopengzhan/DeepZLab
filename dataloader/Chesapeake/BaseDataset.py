@@ -2,11 +2,11 @@ import numpy as np
 import torch
 from einops import rearrange
 from rasterio.enums import Resampling
-
+from abc import ABC, abstractmethod
 from utils.label_maps import get_xx_label_map
 
 
-class BaseDataset():
+class BaseDataset:
     def __init__(self):
         pass
 

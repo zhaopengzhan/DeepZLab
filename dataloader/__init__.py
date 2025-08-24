@@ -3,7 +3,6 @@ import logging
 import pkgutil
 import warnings
 from pathlib import Path
-from typing import Optional
 
 from mmengine.registry import Registry
 
@@ -36,10 +35,10 @@ def build_dataloader1(name: str,
     return DeepZData.build(cfg)
 
 
-def build_dataloader(name: str, use_cfg: Optional[bool] = False, **kwargs):
+def build_dataloader(name: str, **kwargs):
     """
     Build a dataloader by name.
-    If use_cfg is True and the registered class defines a build method, try to call it.
+    If the registered class defines a build method, try to call it with cfg.
     kwargs are merged into cfg and passed to the build procedure.
     """
     cls = DeepZData.module_dict.get(name)
@@ -47,7 +46,8 @@ def build_dataloader(name: str, use_cfg: Optional[bool] = False, **kwargs):
     if cls is None:
         raise KeyError(f"{name} not found in DeepZData registry")
     cfg = dict(type=name, **kwargs)
-    if use_cfg == False and hasattr(cls, "build") and callable(getattr(cls, "build")):
+
+    if not kwargs and hasattr(cls, "build") and callable(getattr(cls, "build")):
         try:
             return cls.build()
         except TypeError:
@@ -55,5 +55,3 @@ def build_dataloader(name: str, use_cfg: Optional[bool] = False, **kwargs):
             return DeepZData.build(cfg)
     else:
         return DeepZData.build(cfg)
-
-

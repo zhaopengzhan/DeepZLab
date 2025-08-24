@@ -3,11 +3,11 @@ import os
 from peft import LoraConfig
 from torch import nn
 from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
-from transformers import VitsModel
-from models import DeepZMODELS
-from transformers import AutoModel
 
-@DeepZMODELS.register_module('LORASegFormer')
+from models import DeepZMODELS
+
+
+# @DeepZMODELS.register_module('LORASegFormer')
 class LORASegFormer(nn.Module):
     def __init__(self, in_channels: int, num_classes: int, model_id: str = "nvidia/segformer-b0-finetuned-ade-512-512"):
         super(LORASegFormer, self).__init__()
@@ -126,7 +126,8 @@ class LORASegFormer(nn.Module):
 
 @DeepZMODELS.register_module('SegFormer')
 class SegFormer(nn.Module):
-    def __init__(self, in_channels: int, num_classes: int, model_id: str = "nvidia/segformer-b0-finetuned-ade-512-512"):
+    def __init__(self, in_channels: int, num_classes: int, model_id: str = "nvidia/segformer-b0-finetuned-ade-512-512",
+                 image_size=None):
         super(SegFormer, self).__init__()
         self.model_id = model_id
         self.in_chans = in_channels
@@ -138,7 +139,7 @@ class SegFormer(nn.Module):
 
         self.up = nn.UpsamplingBilinear2d(scale_factor=4)
 
-        # self._init()
+        self._init()
         pass
 
     def _init(self):
@@ -329,8 +330,8 @@ class DofSegFormer(nn.Module):
 
 def test_build_model():
     model = SegFormer(model_id=SegFormer.get_model_ids()[0],
-                          in_chans=4,
-                          num_classes=32)
+                      in_chans=4,
+                      num_classes=32)
 
     print(model.model.config)
 

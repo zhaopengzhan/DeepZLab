@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from models import DeepZMODELS
+
 
 class SegmentationHead(nn.Sequential):
 
@@ -21,7 +23,7 @@ class StdConv2d(nn.Conv2d):
 
 
 class RPBlock(nn.Module):
-    def __init__(self, input_chs, ratios=[1, 0.5, 0.25], bn_momentum=0.1):
+    def __init__(self, input_chs, ratios=(1, 0.5, 0.25), bn_momentum=0.1):
         super(RPBlock, self).__init__()
         self.branches = nn.ModuleList()
         for i, ratio in enumerate(ratios):
@@ -44,60 +46,32 @@ class RPBlock(nn.Module):
         return output
 
 
+@DeepZMODELS.register_module('L2HNet')
 class L2HNet(nn.Module):
     def __init__(self,
-                 width,  # width=64 for light mode; width=128 for normal mode
-                 image_band=4,
-                 # image_band genenral is 3 (RGB) or 4 (RGB-NIR) for high-resolution remote sensing images
-                 output_chs=128,
+                 in_channels,
+                 num_classes,
+                 image_size=None,
+                 width=64,
                  length=5,
-                 ratios=[1, 0.5, 0.25],
+                 ratios=(1, 0.5, 0.25),
                  bn_momentum=0.1):
         super(L2HNet, self).__init__()
-        self.width = width
-        self.startconv = nn.Conv2d(image_band, self.width, kernel_size=3, stride=1, padding=1)
+
+        self.startconv = nn.Conv2d(in_channels, width, kernel_size=3, stride=1, padding=1)
         self.rpblocks = nn.ModuleList()
+
         for _ in range(length):
-            rpblock = RPBlock(self.width, ratios, bn_momentum)
+            rpblock = RPBlock(width, ratios, bn_momentum)
             self.rpblocks.append(rpblock)
 
-        # self.out_conv1 = nn.Sequential(
-        #     StdConv2d(self.width * length, output_chs * length, kernel_size=3, stride=2, bias=False, padding=1),
-        #     nn.GroupNorm(32, output_chs * 5, eps=1e-6),
-        #     nn.ReLU()
-        # )
-        # self.out_conv2 = nn.Sequential(
-        #     StdConv2d(output_chs * length, 1024, kernel_size=3, stride=2, bias=False, padding=1),
-        #     nn.GroupNorm(32, 1024, eps=1e-6),
-        #     nn.ReLU()
-        # )
-        # self.out_conv3 = nn.Sequential(
-        #     StdConv2d(1024, 1024, kernel_size=5, stride=4, bias=False, padding=1),
-        #     nn.GroupNorm(32, 1024, eps=1e-6),
-        #     nn.ReLU()
-        # )
+        self.classifier = nn.Conv2d(width, num_classes, kernel_size=1)
 
     def forward(self, x):
         x = self.startconv(x)
-        # output_d0 = []
+
         for rpblk in self.rpblocks:
             x = rpblk(x)
-        #     output_d0.append(x)
-        # output_d1 = self.out_conv1(torch.cat(output_d0, dim=1))
-        # output_d2 = self.out_conv2(output_d1)
-        # output_d3 = self.out_conv3(output_d2)
-        # features = [output_d1, output_d2, output_d3, x]
-        return x
-        # return output_d3, features[::-1], output_d0
 
-@DeepZMODELS.register_module('L2HNet')
-class L2HNetSeg(nn.Module):
-    def __init__(self, in_channels, num_classes, width=64):
-        super().__init__()
-        self.cnn = L2HNet(width=width, image_band=in_channels)
+        return self.classifier(x)
 
-        self.fcn = nn.Conv2d(64, num_classes, kernel_size=1)
-
-    def forward(self, x):
-        last_hidden_cnn = self.cnn(x)
-        return self.fcn(last_hidden_cnn)

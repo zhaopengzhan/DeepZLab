@@ -1,44 +1,47 @@
 import warnings
 
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+import torch
 
 warnings.filterwarnings("ignore")
+import logging
+from ptflops import get_model_complexity_info
+
+logging.basicConfig(
+    level=logging.INFO,  # 控制最低输出等级
+    format='[%(asctime)s] [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[logging.StreamHandler()]  # 输出到控制台
+)
+
+import models
 
 
-import dataloader
-
-
-def test_list_dataloader():
-    model_names = dataloader.list_dataloaders()
+def test_list_models():
+    model_names = models.list_models()
     print(model_names)
     pass
 
 
-def test_build_all_dataloader(in_channels=4, image_size=224, num_classes=17):
-    names = dataloader.list_dataloaders()
-    for name in names:
-        train_ds = dataloader.build_dataloader(name)
-        train_dl = DataLoader(train_ds, batch_size=2, drop_last=True, num_workers=4, pin_memory=True)
-        print(len(train_dl))
-        pbar = tqdm(train_dl)
-        for batch_idx, (image_patch, label_lr_patch, label_hr_patch) in enumerate(pbar):
-            print(f'image_patch: {image_patch.shape}')
-            print(f'label_lr_patch: {label_lr_patch.shape}')
-            print(f'label_hr_patch: {label_hr_patch.shape}')
+def test_build_all_models(in_channels=4, image_size=224, num_classes=17):
+    model_names = models.list_models()
+    for model_name in model_names:
+        model = models.build_model(model_name=model_name,
+                                   in_channels=in_channels,
+                                   num_classes=num_classes)
 
-            if batch_idx > 1:
-                break
-
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        model.to(device)
+        macs, params = get_model_complexity_info(model, (in_channels, image_size, image_size),
+                                                 as_strings=True, print_per_layer_stat=False,
+                                                 verbose=False)
+        print(f'model_name: {model_name}')
+        print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+        print()
     pass
 
 
-def test_for_deprecated():
-    dataloader.build_dataloader1(name='Chesapeake_L2H', image_list=[], label_lr_list=[], label_hr_list=[])
-
-
 if __name__ == '__main__':
-    # test_list_dataloader()
-    # test_build_all_dataloader()
-    # test_for_deprecated()
+    # test_list_models()
+    # test_build_all_models()
     pass

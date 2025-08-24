@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import rasterio
 from torch.utils.data import Dataset
@@ -8,8 +6,8 @@ from dataloader import DeepZData
 from .BaseDataset import BaseDataset
 
 
-# @DeepZData.register_module()
-class ChesapeakeTestDataset(Dataset, BaseDataset):
+@DeepZData.register_module()
+class Chesapeake_val(BaseDataset,Dataset):
     def __init__(self, image_path, image_size=224, stride=112):
         super().__init__()
         with rasterio.open(image_path) as image_ds:
@@ -32,11 +30,12 @@ class ChesapeakeTestDataset(Dataset, BaseDataset):
         return len(self.chip_coordinates)
 
     def __getitem__(self, item):
-
         y, x = self.chip_coordinates[item]
-
         image_patch = self.image_np[:, y:y + self.image_size, x:x + self.image_size]
-
         image_ts = self.image_trans1(image_patch)
-
         return image_ts, np.array((y, x))
+
+    @classmethod
+    def build(cls):
+        image_path = r'F:\zpz\datasets\Remote Sensing\cvpr_chesapeake_landcover\ny_1m_2013_extended-debuffered-test_tiles\m_4307563_nw_18_1_naip-new.tif'
+        return cls(image_path, image_size=224, stride=112)

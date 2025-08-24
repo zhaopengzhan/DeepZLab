@@ -7,7 +7,7 @@ from models import DeepZMODELS
 @DeepZMODELS.register_module(name="FCN")
 class FCN(nn.Module):
 
-    def __init__(self, in_channels, num_classes, num_filters=64):
+    def __init__(self, in_channels, num_classes, image_size=None, num_filters=64):
         super(FCN, self).__init__()
         num_input_channels = in_channels
         num_output_classes = num_classes
@@ -31,7 +31,7 @@ class FCN(nn.Module):
 @DeepZMODELS.register_module(name="SkipFCN")
 class Skip_FCN(nn.Module):
 
-    def __init__(self, in_channels, num_classes, num_filters=64):
+    def __init__(self, in_channels, num_classes,image_size=None, num_filters=64):
         super(Skip_FCN, self).__init__()
         num_input_channels = in_channels
         num_output_classes = num_classes

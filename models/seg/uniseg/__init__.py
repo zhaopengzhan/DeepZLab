@@ -10,9 +10,6 @@ import glob
 from tqdm import tqdm
 from PIL import Image
 import cv2
-import warnings
-
-warnings.filterwarnings("ignore")
 
 
 def main():
