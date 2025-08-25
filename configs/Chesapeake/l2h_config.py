@@ -27,7 +27,7 @@ class ConfigManager(BaseConfig):
         # model
         args.num_classes = 17
         args.in_channels = 4
-        args.model_name = 'SegFormer'
+        args.model_name = 'SpectralTokenizer'
 
         # dataset
         args.train_data = 'Chesapeake_L2H'
