@@ -7,7 +7,7 @@ from transformers import SegformerForSemanticSegmentation, AutoProcessor
 
 from models import DeepZMODELS
 from utils.initializer import init_conv
-
+from models import root_dir
 
 @DeepZMODELS.register_module('SpectralTokenizer')
 class SegFormer(nn.Module):
@@ -18,7 +18,7 @@ class SegFormer(nn.Module):
         self.in_chans = in_channels
         self.num_classes = num_classes
         # config = SegformerConfig(num_channels=in_chans, num_labels=num_classes)
-        root_dir = r'F:/cache_hf'
+
         local_dir = os.path.join(root_dir, model_id)
         _, self.model = self.load_segformer(model_id, local_dir)
 

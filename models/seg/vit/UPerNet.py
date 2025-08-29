@@ -6,7 +6,7 @@ from torch import nn
 from transformers import MobileViTForSemanticSegmentation, AutoImageProcessor, MobileViTV2ForSemanticSegmentation, \
     UperNetForSemanticSegmentation
 from models import DeepZMODELS
-
+from models import root_dir
 
 # @DeepZMODELS.register_module('UperNet')
 class UperNet(nn.Module):
@@ -16,7 +16,7 @@ class UperNet(nn.Module):
         self.in_chans = in_channels
         self.num_classes = num_classes
 
-        root_dir = r'F:/cache_hf'
+
         local_dir = os.path.join(root_dir, model_id)
         _, self.model = self.load_model(model_id, local_dir)
 

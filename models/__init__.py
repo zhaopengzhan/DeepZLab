@@ -6,7 +6,10 @@ from mmengine.registry import Registry
 
 DeepZMODELS = Registry('MODELS')
 
-#
+# cfg
+root_dir = r'F:/cache_hf'
+
+# dynamic import
 _pkg_dir = Path(__file__).resolve().parent
 _prefix  = __name__ + '.'
 for m in pkgutil.walk_packages([str(_pkg_dir)], _prefix):

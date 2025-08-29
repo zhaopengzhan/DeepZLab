@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from models import DeepZMODELS
-
+from models import root_dir
 # @DeepZMODELS.register_module('DPT')
 class DPT(nn.Module):
     def __init__(self, in_channels: int, num_classes: int, model_id: str = "Intel/dpt-large-ade"):
@@ -20,7 +20,6 @@ class DPT(nn.Module):
         self.in_chans = in_channels
         self.num_classes = num_classes
 
-        root_dir = r'F:/cache_hf'
         local_dir = os.path.join(root_dir, model_id)
         _, self.model = self.load_model(model_id, local_dir)
 

@@ -6,7 +6,7 @@ from torch import nn
 from transformers import Mask2FormerForUniversalSegmentation, Mask2FormerImageProcessor
 
 from models import DeepZMODELS
-
+from models import root_dir
 # @DeepZMODELS.register_module('Mask2Former')
 class Mask2Former(nn.Module):
     def __init__(self, in_channels: int, num_classes: int, model_id: str = "facebook/mask2former-swin-tiny-ade-semantic"):
@@ -15,7 +15,6 @@ class Mask2Former(nn.Module):
         self.in_chans = in_channels
         self.num_classes = num_classes
 
-        root_dir = r'F:/cache_hf'
         local_dir = os.path.join(root_dir, model_id)
         self.processor, self.model = self.load_model(model_id, local_dir)
 
