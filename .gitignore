@@ -18,6 +18,8 @@ datasets/
 
 # 训练输出
 run/
+dev/
+scripts/
 logs/
 results/
 outputs/

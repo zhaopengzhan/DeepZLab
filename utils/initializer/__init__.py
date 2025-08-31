@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.init as init
 
 from .gabor_initializer import get_conv_weight
+from .landsat_initializer import get_naip_conv_weight, get_landsat_conv_weight
 from .upsample_init import bilinear_kernel
 
 def init_conv(m: nn.Module,
@@ -40,6 +41,15 @@ def init_conv(m: nn.Module,
         elif kind == "bilinear_init":
             with torch.no_grad():
                 w1 = bilinear_kernel(m.in_channels, m.out_channels, kernel_size=m.kernel_size)
+                m.weight.data.copy_(w1)
+        elif kind == "naip_init":
+            with torch.no_grad():
+                w1 = get_naip_conv_weight( m.out_channels, kernel_size=m.kernel_size)
+                m.weight.data.copy_(w1)
+        elif kind == "landsat_init":
+            with torch.no_grad():
+                w1 = get_landsat_conv_weight( m.out_channels, kernel_size=m.kernel_size)
+                # w1 = get_landsat_conv_weight( m.out_channels, kernel_size=m.kernel_size)[:,[2,3,4,5],...]
                 m.weight.data.copy_(w1)
         else:
             raise ValueError(f"Unknown init kind: {kind}")

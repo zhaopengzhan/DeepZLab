@@ -4,6 +4,7 @@
 
 '''
 import functools
+import inspect
 import time
 
 import numpy as np
@@ -22,6 +23,7 @@ def calRunTime(func):
         return result
 
     return wrapper
+
 
 class calRunTimer():
     def __init__(self, block_name='', func=None, disable=False):
@@ -178,10 +180,32 @@ def adjust_checkpoint(checkpoint, model_state):
 
     return updated_checkpoint
 
+
 def custom_collate_fn(batch):
     images, labels = zip(*batch)
     # images = torch.stack(images, dim=0)
     return images, labels
+
+
+def change_conv_channel(conv, in_ch=None, out_ch=None):
+    # 1. 拿到 Conv2d 构造函数的参数列表
+    sig = inspect.signature(conv.__class__.__init__)
+    valid_keys = sig.parameters.keys()
+
+    # 2. old_conv.__dict__ 里挑出构造函数用得上的参数
+    kwargs = {k: v for k, v in conv.__dict__.items() if k in valid_keys}
+
+    # 3. 替换 in/out_channels
+    if in_ch is not None:
+        kwargs["in_channels"] = in_ch
+    if out_ch is not None:
+        kwargs["out_channels"] = out_ch
+
+    # 4. bias 要特殊处理：bias 是个 Parameter，不是 bool
+    kwargs["bias"] = (conv.bias is not None)
+
+    return conv.__class__(**kwargs)
+
 
 if __name__ == '__main__':
     loss_wrapper = Wrapper()
