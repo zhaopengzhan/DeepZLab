@@ -31,4 +31,13 @@ args, train_dl, val_list, model, train_one_epoch, val_one_epoch
 使用SpiderNet，在Chesapeake数据集
 
 1. 修改model_name即可
-2. 
+
+
+
+## Changelog
+
+### 2025-09-29
+
+- 新增 `clip_raster_by_polygon` 方法
+  - 仅支持按 **单个矢量多边形** 裁剪栅格。
+- 原有的 `clip_raster_by_shp` 方法更名为 **`clip_raster_by_rectangle`**，以更准确地反映其“按外包矩形裁剪”的功能。

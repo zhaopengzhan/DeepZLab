@@ -9,7 +9,7 @@ import time
 
 import numpy as np
 import torch
-
+from matplotlib import pyplot as plt
 
 def calRunTime(func):
     """ 计算函数运行时间的装饰器 """
@@ -56,7 +56,7 @@ class calRunTimer():
 
 class Wrapper:
     '''
-    自己写的封装类，封装Loss\AverageMeter
+    自己写的封装类，封装Loss AverageMeter
     '''
 
     def __init__(self):
@@ -205,6 +205,94 @@ def change_conv_channel(conv, in_ch=None, out_ch=None):
     kwargs["bias"] = (conv.bias is not None)
 
     return conv.__class__(**kwargs)
+
+
+def compare_model_weights(model_a: torch.nn.Module, model_b: torch.nn.Module, rtol=1e-5, atol=1e-8):
+    """
+    对比两个模型的 state_dict，逐个 key 检查权重是否一致。
+
+    Args:
+        model_a, model_b: 待比较的模型
+        rtol, atol: torch.allclose 的容差设置
+
+    Returns:
+        results: dict[str, bool]，key 是参数名，value=True 表示完全一致，False 表示不一致或缺失
+    """
+    # 临时拷贝到 CPU
+    # state_a = {k: v.detach().cpu() for k, v in model_a.state_dict().items()}
+    # state_b = {k: v.detach().cpu() for k, v in model_b.state_dict().items()}
+    state_a = model_a.state_dict()
+    state_b = model_b.state_dict()
+
+    results = {}
+    all_keys = set(state_a.keys()) | set(state_b.keys())
+    for key in sorted(all_keys):
+        if key not in state_a:
+            results[key] = False
+            print(f"[缺失] {key} 只在 model_b 中")
+        elif key not in state_b:
+            results[key] = False
+            print(f"[缺失] {key} 只在 model_a 中")
+        else:
+            same = torch.allclose(state_a[key].cpu(), state_b[key].cpu(),
+                                  rtol=rtol, atol=atol)
+            results[key] = same
+            if not same:
+                diff = (state_a[key] - state_b[key]).abs().max().item()
+                print(f"[不同] {key}  最大差异 {diff:.6f}")
+    return results
+
+
+def find_first_input_conv(model: torch.nn.Module, expected_in_ch: int):
+    """
+    在模型中查找第一个 nn.Conv2d 且 in_channels == expected_in_ch 的层。
+    返回 (layer_name, layer_module)；若未找到则抛出异常。
+    """
+    for name, m in model.named_modules():
+        if isinstance(m, torch.nn.Conv2d) and m.in_channels == expected_in_ch:
+            return name, m
+    # 若像 SegFormer 这类模型首层是 patch embedding，可能 in_channels 匹配在某个 proj 上
+    # 可放宽条件（例如前若干层里找 kernel_size>1 的 Conv2d），但此处优先严格匹配：
+    raise RuntimeError(f"找不到首层输入卷积：未发现 in_channels == {expected_in_ch} 的 nn.Conv2d")
+
+
+def compare_model_first_input_conv(args, model_a: torch.nn.Module, model_b: torch.nn.Module):
+
+    nameA, convA = find_first_input_conv(model_a, args.in_channels)
+    nameB, convB = find_first_input_conv(model_b, args.in_channels_val)
+
+    wA = convA.weight.detach().cpu().numpy()
+    wB = convB.weight.detach().cpu().numpy()
+
+    # ---------- 绘制 A ----------
+    for c in range(wA.shape[1]):
+        fig, axes = plt.subplots(6, 6, figsize=(16, 16))
+        axes = axes.ravel()
+        for i in range(32):  # out_channels
+            # 这里只画第0个输入通道的卷积核，可以改成 np.mean(wA[i], axis=0) 来画7个通道的平均
+            kernel = wA[i, c, :, :]
+            axes[i].imshow(kernel, cmap="RdBu_r")
+            axes[i].set_title(f"A-{i}", fontsize=8)
+            axes[i].axis("off")
+        plt.suptitle("Model A Conv Kernels (ch0)", fontsize=12)
+        plt.tight_layout()
+        plt.savefig(f"inc/A_{c}.png")
+        # plt.show()
+
+    # ---------- 绘制 B ----------
+    for c in range(wB.shape[1]):
+        fig, axes = plt.subplots(6, 6, figsize=(16, 16))
+        axes = axes.ravel()
+        for i in range(32):
+            kernel = wB[i, c, :, :]
+            axes[i].imshow(kernel, cmap="RdBu_r")
+            axes[i].set_title(f"B-{i}", fontsize=8)
+            axes[i].axis("off")
+        plt.suptitle("Model B Conv Kernels (ch0)", fontsize=12)
+        plt.tight_layout()
+        plt.savefig(f"inc/B_{c}.png")
+        # plt.show()
+    pass
 
 
 if __name__ == '__main__':
